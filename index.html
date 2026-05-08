@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MindMirror — Mood Therapy</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0a0c12;--surf:#111420;--border:rgba(255,255,255,.07);--a:#7ee8c8;--a2:#c47eff;--txt:#e8e4dc;--mut:#5a5a72;--red:#ff6b6b;--yel:#ffe07e;--ga:rgba(126,232,200,.12);--gb:rgba(196,126,255,.12);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:'DM Mono',monospace;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.4;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E")}
+.orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0}
+.o1{width:500px;height:500px;background:var(--ga);top:-170px;left:-170px;animation:o1 15s ease-in-out infinite alternate}
+.o2{width:430px;height:430px;background:var(--gb);bottom:-130px;right:-130px;animation:o2 18s ease-in-out infinite alternate}
+@keyframes o1{to{transform:translate(60px,80px)}}
+@keyframes o2{to{transform:translate(-60px,-80px)}}
+.shell{position:relative;z-index:1;max-width:1160px;margin:0 auto;padding:34px 22px 90px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:38px;flex-wrap:wrap;gap:10px}
+.logo{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;letter-spacing:.12em}
+.logo span{color:var(--a);font-style:italic}
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.bdg{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:1px;font-size:.52rem;letter-spacing:.14em;text-transform:uppercase}
+.bg{border:1px solid rgba(126,232,200,.2);color:var(--a)}.bp{border:1px solid rgba(196,126,255,.2);color:var(--a2)}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(1.9rem,5vw,3.3rem);font-weight:300;line-height:1.13;margin-bottom:9px}
+h1 em{color:var(--a);font-style:italic}
+.sub{font-size:.61rem;color:var(--mut);letter-spacing:.16em;text-transform:uppercase;margin-bottom:36px}
+.g2{display:grid;grid-template-columns:1fr 348px;gap:18px;align-items:start;margin-bottom:22px}
+@media(max-width:820px){.g2{grid-template-columns:1fr}}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:22px}
+@media(max-width:860px){.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.g3{grid-template-columns:1fr}}
+.card{background:var(--surf);border:1px solid var(--border);border-radius:2px}
+.ch{font-size:.54rem;letter-spacing:.23em;color:var(--mut);text-transform:uppercase;padding:11px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.p{padding:15px}
+.pt{font-size:.54rem;letter-spacing:.23em;color:var(--mut);text-transform:uppercase;margin-bottom:12px}
+/* loader */
+.lsteps{display:flex;flex-direction:column;gap:5px;padding:12px 15px 8px}
+.lstep{display:flex;align-items:center;gap:9px;font-size:.55rem;letter-spacing:.09em}
+.lic{width:14px;text-align:center;flex-shrink:0}
+.lprog{padding:4px 15px 12px;display:flex;flex-direction:column;gap:5px}
+.lbar{height:2px;background:rgba(255,255,255,.06);border-radius:1px;overflow:hidden}
+.lfill{height:100%;width:0%;background:linear-gradient(90deg,var(--a),var(--a2));transition:width .4s ease}
+.lmsg{font-size:.52rem;color:var(--mut);letter-spacing:.1em}
+/* camera */
+.ch2{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border);font-size:.54rem;letter-spacing:.2em;color:var(--mut);text-transform:uppercase}
+.sr{display:flex;align-items:center;gap:6px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--mut);transition:background .4s}
+.dot.on{background:var(--a);box-shadow:0 0 7px var(--a);animation:pu 1.4s ease-in-out infinite}
+.dot.saving{background:var(--a2);box-shadow:0 0 7px var(--a2);animation:pu .5s ease-in-out infinite}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.28}}
+.vw{position:relative;width:100%;aspect-ratio:4/3;background:#050709;overflow:hidden}
+.idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:10;background:#050709;transition:opacity .5s}
+.idle.h{opacity:0;pointer-events:none}
+.esv{width:54px;opacity:.14;animation:bl 5s ease-in-out infinite}
+@keyframes bl{0%,88%,100%{transform:scaleY(1)}94%{transform:scaleY(.04)}}
+.it{font-size:.57rem;color:var(--mut);letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:0 20px;line-height:1.7}
+video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+canvas#ov{position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}
+.sf{position:absolute;inset:0;z-index:9;pointer-events:none;background:rgba(126,232,200,.13);opacity:0;transition:opacity .12s}
+.sf.on{opacity:1}
+.slines{position:absolute;inset:0;z-index:3;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);opacity:0;transition:opacity .5s}
+.slines.on{opacity:1}
+.cn{position:absolute;width:14px;height:14px;z-index:8;opacity:0;transition:opacity .35s}
+.cn.s{opacity:1}
+.ctlx{top:7px;left:7px;border-top:1px solid var(--a);border-left:1px solid var(--a)}
+.ctrx{top:7px;right:7px;border-top:1px solid var(--a);border-right:1px solid var(--a)}
+.cblx{bottom:7px;left:7px;border-bottom:1px solid var(--a);border-left:1px solid var(--a)}
+.cbrx{bottom:7px;right:7px;border-bottom:1px solid var(--a);border-right:1px solid var(--a)}
+.nfb{display:none;align-items:center;gap:8px;padding:7px 14px;background:rgba(255,224,126,.05);border-bottom:1px solid rgba(255,224,126,.14);font-size:.54rem;color:var(--yel);letter-spacing:.1em}
+.nfb.show{display:flex}
+.sbar{padding:8px 14px;border-top:1px solid var(--border);font-size:.53rem;color:var(--mut);letter-spacing:.11em;min-height:30px;display:flex;align-items:center;transition:color .3s}
+.sbar.ok{color:var(--a)}.sbar.er{color:var(--red)}.sbar.wa{color:var(--yel)}
+.cdwrap{padding:6px 14px 9px;border-top:1px solid var(--border)}
+.cdtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.cdlbl{font-size:.48rem;letter-spacing:.14em;color:var(--mut);text-transform:uppercase}
+.cdr{display:flex;align-items:center;gap:7px}
+.cdpulse{font-size:.72rem;transition:transform .25s,filter .25s;display:inline-block}
+.cdpulse.flash{transform:scale(2.1);filter:drop-shadow(0 0 8px var(--a))}
+.cdtxt{font-size:.52rem;transition:color .3s}
+.cdtrack{height:2px;background:rgba(255,255,255,.05);border-radius:1px;overflow:hidden}
+.cdfill{height:100%;width:0%;border-radius:1px;transition:width .22s linear}
+.brow{display:flex;gap:10px;padding:12px 14px 14px;border-top:1px solid var(--border)}
+.btn{flex:1;padding:10px 6px;border:1px solid var(--border);border-radius:1px;background:transparent;color:var(--txt);font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.btn::after{content:'';position:absolute;inset:0;background:currentColor;opacity:0;transition:opacity .16s}
+.btn:hover:not(:disabled)::after{opacity:.07}
+.btn.go{border-color:var(--a);color:var(--a)}.btn.go:hover:not(:disabled){box-shadow:0 0 14px rgba(126,232,200,.2)}
+.btn.stop{border-color:var(--red);color:var(--red)}.btn.stop:hover:not(:disabled){box-shadow:0 0 14px rgba(255,107,107,.18)}
+.btn.sm{padding:4px 9px;font-size:.5rem;flex:none;border-color:rgba(255,107,107,.3);color:var(--red)}
+.btn:disabled{opacity:.27;cursor:not-allowed}
+.sp{display:flex;flex-direction:column;gap:15px}
+.md{display:flex;flex-direction:column;align-items:center;gap:7px;margin-bottom:12px}
+.me{font-size:2.9rem;line-height:1;filter:drop-shadow(0 0 14px rgba(255,255,255,.16));transition:all .5s}
+.mn{font-family:'Cormorant Garamond',serif;font-size:1.44rem;font-weight:300;letter-spacing:.07em;transition:color .5s}
+.mc{font-size:.55rem;color:var(--mut);letter-spacing:.09em;text-align:center;line-height:1.65}
+.rw{display:flex;align-items:center;gap:13px;padding:11px 15px;border-top:1px solid var(--border)}
+.rr{position:relative;width:58px;height:58px;flex-shrink:0}
+.rr svg{transform:rotate(-90deg)}
+.rbg{fill:none;stroke:rgba(255,255,255,.05);stroke-width:5}
+.rfg{fill:none;stroke-width:5;stroke-linecap:round;stroke-dasharray:163;stroke-dashoffset:163;transition:stroke-dashoffset .8s ease,stroke .5s}
+.rv{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.66rem}
+.rinfo{flex:1}
+.rl{font-size:.51rem;letter-spacing:.18em;color:var(--mut);text-transform:uppercase;margin-bottom:3px}
+.rd{font-size:.57rem;color:var(--txt);line-height:1.55}
+.el{display:flex;flex-direction:column;gap:7px}
+.erow{display:flex;align-items:center;gap:7px}
+.en{font-size:.52rem;color:var(--mut);letter-spacing:.07em;width:68px;flex-shrink:0;text-transform:capitalize}
+.ebw{flex:1;height:2px;background:rgba(255,255,255,.05);border-radius:1px;overflow:hidden}
+.eb{height:100%;width:0;border-radius:1px;background:var(--a);transition:width .6s ease,background .4s,opacity .4s}
+.ev{font-size:.5rem;color:var(--mut);width:28px;text-align:right}
+.rl2{display:flex;flex-direction:column;gap:9px}
+.ri{padding:10px 11px;border:1px solid var(--border);border-radius:1px;font-size:.58rem;line-height:1.65;color:var(--txt);opacity:.55;transition:all .4s}
+.ri.ac{border-color:var(--a);opacity:1;background:rgba(126,232,200,.03);box-shadow:0 0 8px rgba(126,232,200,.06)}
+.rt{font-size:.5rem;letter-spacing:.16em;color:var(--a);text-transform:uppercase;margin-bottom:3px}
+.sec{font-size:.55rem;letter-spacing:.23em;color:var(--mut);text-transform:uppercase;margin-bottom:13px;display:flex;align-items:center;gap:10px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.sv{font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:300;line-height:1;margin-bottom:3px}
+.sv span{color:var(--a)}
+.sl{font-size:.51rem;color:var(--mut);letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px}
+.ss{font-size:.54rem;color:var(--mut);line-height:1.6}
+.dl{display:flex;flex-direction:column;gap:8px}
+.dr{display:flex;align-items:center;gap:7px}
+.de{font-size:.88rem;width:18px;text-align:center}
+.dlab{font-size:.51rem;color:var(--mut);width:62px;text-transform:capitalize}
+.dbw{flex:1;height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden}
+.db{height:100%;border-radius:3px;transition:width .7s}
+.dc{font-size:.5rem;color:var(--mut);width:18px;text-align:right}
+.hl{display:flex;flex-direction:column;max-height:290px;overflow-y:auto}
+.hl::-webkit-scrollbar{width:2px}.hl::-webkit-scrollbar-thumb{background:var(--border)}
+.hrow{display:flex;align-items:center;gap:9px;padding:8px 15px;border-bottom:1px solid rgba(255,255,255,.033)}
+.hrow:last-child{border-bottom:none}
+.he{font-size:.9rem;width:18px;text-align:center}
+.hm{font-size:.55rem;width:76px;text-transform:capitalize}
+.ha{font-size:.52rem;width:38px;text-align:center;padding:1px 4px;border-radius:1px;border:1px solid var(--border)}
+.ha.high{color:var(--a);border-color:rgba(126,232,200,.26)}
+.ha.medium{color:var(--yel);border-color:rgba(255,224,126,.26)}
+.ha.low{color:var(--red);border-color:rgba(255,107,107,.26)}
+.hx{font-size:.5rem;color:var(--mut);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ht{font-size:.49rem;color:var(--mut);width:50px;text-align:right}
+.tl2{display:flex;justify-content:space-between;font-size:.48rem;color:var(--mut);margin-top:5px}
+.emp{padding:26px 14px;text-align:center;font-size:.57rem;color:var(--mut);line-height:1.7}
+.empico{font-size:1.7rem;margin-bottom:5px;opacity:.27}
+footer{margin-top:52px;text-align:center;font-size:.51rem;letter-spacing:.16em;color:var(--mut);text-transform:uppercase}
+/* ── Navigation tabs ── */
+.nav{display:flex;gap:2px;margin-bottom:32px;border-bottom:1px solid var(--border);padding-bottom:0}
+.nav-btn{padding:10px 22px;font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;background:none;border:none;color:var(--mut);cursor:pointer;position:relative;transition:color .2s}
+.nav-btn::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:var(--a);transform:scaleX(0);transition:transform .25s}
+.nav-btn:hover{color:var(--txt)}.nav-btn.active{color:var(--a)}.nav-btn.active::after{transform:scaleX(1)}
+.page{display:none}.page.active{display:block}
+/* ── Profile ── */
+.pf-hero{display:flex;align-items:center;gap:22px;margin-bottom:28px;flex-wrap:wrap}
+.pf-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--ga),var(--gb));border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:2rem;cursor:pointer;position:relative;overflow:hidden;flex-shrink:0;transition:border-color .2s}
+.pf-avatar:hover{border-color:var(--a)}
+.pf-avatar input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.pf-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:none}
+.pf-avatar img.show{display:block}
+.pf-hero-info{flex:1;min-width:180px}
+.pf-name{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;letter-spacing:.05em;margin-bottom:4px}
+.pf-tagline{font-size:.56rem;color:var(--mut);letter-spacing:.12em;line-height:1.6}
+.pf-edit-btn{padding:6px 14px;border:1px solid var(--border);border-radius:1px;background:none;color:var(--mut);font-family:'DM Mono',monospace;font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:all .2s;margin-top:8px;display:inline-block}
+.pf-edit-btn:hover{border-color:var(--a);color:var(--a)}
+.pf-form-wrap{margin-bottom:22px}
+.pf-form{display:none;flex-direction:column;gap:14px;padding:16px;background:var(--surf);border:1px solid var(--border);border-radius:2px}
+.pf-form.show{display:flex}
+.pf-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.pf-row{grid-template-columns:1fr}}
+.pf-field{display:flex;flex-direction:column;gap:5px}
+.pf-label{font-size:.5rem;letter-spacing:.18em;color:var(--mut);text-transform:uppercase}
+.pf-input{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:1px;padding:8px 11px;color:var(--txt);font-family:'DM Mono',monospace;font-size:.62rem;outline:none;transition:border-color .2s;width:100%}
+.pf-input:focus{border-color:var(--a)}.pf-input::placeholder{color:var(--mut)}
+select.pf-input option{background:#111420;color:var(--txt)}
+.pf-actions{display:flex;gap:10px;margin-top:4px}
+.pf-save{padding:8px 18px;border:1px solid var(--a);border-radius:1px;background:none;color:var(--a);font-family:'DM Mono',monospace;font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.pf-save:hover{background:rgba(126,232,200,.07)}
+.pf-cancel{padding:8px 14px;border:1px solid var(--border);border-radius:1px;background:none;color:var(--mut);font-family:'DM Mono',monospace;font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.pf-cancel:hover{border-color:var(--txt);color:var(--txt)}
+/* stat tiles */
+.stat-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+@media(max-width:700px){.stat-tiles{grid-template-columns:repeat(2,1fr)}}
+.tile{background:var(--surf);border:1px solid var(--border);border-radius:2px;padding:14px 13px}
+.tile-val{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:300;line-height:1;margin-bottom:2px}
+.tile-val span{color:var(--a)}
+.tile-lbl{font-size:.48rem;letter-spacing:.16em;color:var(--mut);text-transform:uppercase}
+/* donut chart */
+.donut-wrap{display:flex;align-items:center;gap:20px;padding:12px 15px 16px;flex-wrap:wrap}
+.donut-legend{display:flex;flex-direction:column;gap:8px;flex:1;min-width:120px}
+.donut-item{display:flex;align-items:center;gap:8px;font-size:.53rem}
+.donut-swatch{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.donut-lbl{color:var(--mut);flex:1}
+.donut-pct{color:var(--txt)}
+/* goals */
+.goals-list{display:flex;flex-direction:column;gap:8px;padding:12px 15px}
+.goal-item{display:flex;align-items:flex-start;gap:10px;padding:9px 11px;border:1px solid var(--border);border-radius:1px;background:rgba(255,255,255,.015);transition:border-color .2s}
+.goal-item:hover{border-color:rgba(255,255,255,.11)}
+.goal-check{width:16px;height:16px;border:1px solid var(--border);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:.6rem;margin-top:1px}
+.goal-check.done{background:var(--a);border-color:var(--a);color:#0a0c12}
+.goal-text{flex:1;font-size:.57rem;line-height:1.55;transition:color .2s}
+.goal-text.done{text-decoration:line-through;color:var(--mut)}
+.goal-del{background:none;border:none;color:var(--mut);cursor:pointer;font-size:.7rem;padding:1px 3px;opacity:0;transition:opacity .2s;line-height:1}
+.goal-item:hover .goal-del{opacity:.6}.goal-del:hover{color:var(--red);opacity:1!important}
+.goal-add{display:flex;gap:8px;padding:8px 15px 12px;border-top:1px solid var(--border)}
+.goal-input{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:1px;padding:7px 10px;color:var(--txt);font-family:'DM Mono',monospace;font-size:.57rem;outline:none;transition:border-color .2s}
+.goal-input:focus{border-color:var(--a)}.goal-input::placeholder{color:var(--mut)}
+.goal-add-btn{padding:7px 13px;border:1px solid var(--a);border-radius:1px;background:none;color:var(--a);font-family:'DM Mono',monospace;font-size:.54rem;letter-spacing:.12em;cursor:pointer;transition:all .2s}
+.goal-add-btn:hover{background:rgba(126,232,200,.07)}
+/* streak & calendar */
+.streak-row{display:flex;align-items:center;gap:18px;padding:14px 15px;flex-wrap:wrap}
+.streak-num{font-family:'Cormorant Garamond',serif;font-size:3.2rem;font-weight:300;line-height:1;color:var(--a)}
+.streak-info{flex:1}.streak-lbl{font-size:.49rem;letter-spacing:.18em;color:var(--mut);text-transform:uppercase;margin-bottom:3px}
+.streak-sub{font-size:.57rem;color:var(--txt);line-height:1.55}
+.cal-wrap{padding:0 15px 14px}
+.cal-grid{display:flex;flex-wrap:wrap;gap:3px}
+.cal-day{width:12px;height:12px;border-radius:2px;background:rgba(255,255,255,.05);transition:background .3s;cursor:default;position:relative}
+.cal-day.scanned{background:rgba(126,232,200,.45)}
+.cal-day.today{background:var(--a);box-shadow:0 0 5px rgba(126,232,200,.5)}
+.cal-day[title]:hover::after{content:attr(title);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#1a1d2a;border:1px solid var(--border);padding:3px 7px;border-radius:1px;font-size:.48rem;white-space:nowrap;pointer-events:none;z-index:100;color:var(--txt)}
+/* mood timeline */
+.tl-wrap{max-height:260px;overflow-y:auto;padding:4px 0}
+.tl-wrap::-webkit-scrollbar{width:2px}.tl-wrap::-webkit-scrollbar-thumb{background:var(--border)}
+.tl-item{display:flex;align-items:center;gap:10px;padding:7px 15px;position:relative}
+.tl-item::before{content:'';position:absolute;left:24px;top:0;bottom:0;width:1px;background:rgba(255,255,255,.05);z-index:0}
+.tl-item:first-child::before{top:50%}.tl-item:last-child::before{bottom:50%}
+.tl-node{width:9px;height:9px;border-radius:50%;flex-shrink:0;z-index:1;border:1px solid var(--bg)}
+.tl-time{font-size:.49rem;color:var(--mut);width:52px;flex-shrink:0}
+.tl-mood{font-size:.55rem;flex:1}
+.tl-acc{font-size:.49rem;color:var(--mut)}
+/* pf grid */
+.pf-grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
+@media(max-width:700px){.pf-grid2{grid-template-columns:1fr}}
+.pf-full{margin-bottom:22px}
+.emp2{padding:26px 14px;text-align:center;font-size:.57rem;color:var(--mut);line-height:1.7}
+.emp2 .bi2{font-size:1.7rem;margin-bottom:5px;opacity:.27}
+</style>
+</head>
+<body>
+<div class="orb o1"></div><div class="orb o2"></div>
+<div class="shell">
+  <header>
+    <div class="logo">Mind<span>Mirror</span></div>
+    <div class="badges">
+      <div class="bdg bg">🧠 face-api.js Neural Net</div>
+      <div class="bdg bp">🗄️ IndexedDB</div>
+      <div class="bdg bg">⏱ Timed Scans</div>
+    </div>
+  </header>
+  <h1>Read your face,<br><em>heal your mind.</em></h1>
+  <!-- Navigation -->
+  <nav class="nav">
+    <button class="nav-btn active" id="navScan" onclick="showPage('scan')">🎯 Scanner</button>
+    <button class="nav-btn" id="navProfile" onclick="showPage('profile')">👤 Profile</button>
+  </nav>
+
+  <!-- ══ SCANNER PAGE ══ -->
+  <div class="page active" id="page-scan">
+  <div class="g2">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <!-- Loader -->
+      <div class="card" id="loaderCard">
+        <div class="ch">Neural Network Setup</div>
+        <div class="lsteps">
+          <div class="lstep"><span class="lic" id="i0">⏳</span><span id="m0">Loading face-api.js library…</span></div>
+          <div class="lstep"><span class="lic" id="i1">⬜</span><span id="m1">TinyFaceDetector model</span></div>
+          <div class="lstep"><span class="lic" id="i2">⬜</span><span id="m2">Face Landmark model</span></div>
+          <div class="lstep"><span class="lic" id="i3">⬜</span><span id="m3">Expression Recognition model</span></div>
+        </div>
+        <div class="lprog">
+          <div class="lbar"><div class="lfill" id="lfill"></div></div>
+          <div class="lmsg" id="lmsg">Initialising…</div>
+        </div>
+      </div>
+      <!-- Camera -->
+      <div class="card" style="overflow:hidden">
+        <div class="ch2">
+          <span>Live Feed</span>
+          <div class="sr"><div class="dot" id="liveDot"></div><span id="liveStatus">Inactive</span></div>
+        </div>
+        <div class="nfb" id="nfb">⚠ No face detected — move into frame to resume scanning</div>
+        <div class="vw">
+          <div class="slines" id="sl"></div>
+          <div class="cn ctlx"></div><div class="cn ctrx"></div>
+          <div class="cn cblx"></div><div class="cn cbrx"></div>
+          <div class="sf" id="sf"></div>
+          <div class="idle" id="idleEl">
+            <svg class="esv" viewBox="0 0 80 40" fill="none">
+              <path d="M4 20 C20 2,60 2,76 20 C60 38,20 38,4 20Z" stroke="white" stroke-width="1.8" fill="none"/>
+              <circle cx="40" cy="20" r="9" stroke="white" stroke-width="1.8" fill="none"/>
+              <circle cx="40" cy="20" r="3" fill="white"/>
+            </svg>
+            <div class="it" id="idleText">Loading neural network…</div>
+          </div>
+          <video id="vid" autoplay muted playsinline></video>
+          <canvas id="ov"></canvas>
+        </div>
+        <div class="sbar" id="sb">Initialising…</div>
+        <div class="cdwrap">
+          <div class="cdtop">
+            <span class="cdlbl">Scan interval · every 5 s</span>
+            <div class="cdr">
+              <span class="cdpulse" id="cdpulse">📸</span>
+              <span class="cdtxt" id="cdtxt">—</span>
+            </div>
+          </div>
+          <div class="cdtrack"><div class="cdfill" id="cdfill"></div></div>
+        </div>
+        <div class="brow">
+          <button class="btn go"   id="btnStart" disabled>▶ Start Camera</button>
+          <button class="btn stop" id="btnStop"  disabled>■ Stop Camera</button>
+        </div>
+      </div>
+    </div>
+    <!-- Right -->
+    <div class="sp">
+      <div class="card">
+        <div class="p">
+          <div class="pt">Detected Mood</div>
+          <div class="md">
+            <div class="me" id="moodEmoji">🌫️</div>
+            <div class="mn" id="moodName">Waiting…</div>
+            <div class="mc" id="moodConf">—</div>
+          </div>
+          <div class="el" id="exprList"></div>
+        </div>
+        <div class="rw">
+          <div class="rr">
+            <svg width="58" height="58" viewBox="0 0 58 58">
+              <defs><linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#7ee8c8"/><stop offset="100%" stop-color="#c47eff"/></linearGradient></defs>
+              <circle class="rbg" cx="29" cy="29" r="24"/>
+              <circle class="rfg" cx="29" cy="29" r="24" id="ringFg"/>
+            </svg>
+            <div class="rv" id="ringVal">—</div>
+          </div>
+          <div class="rinfo">
+            <div class="rl">Neural Net Score</div>
+            <div class="rd" id="ringDesc">Start camera to begin.</div>
+          </div>
+        </div>
+      </div>
+      <div class="card p">
+        <div class="pt">Therapeutic Guidance</div>
+        <div class="rl2" id="recList">
+          <div class="ri ac"><div class="rt">Begin</div>Models loading… Once ready, start the camera. The neural net analyses 68 facial landmarks every frame and saves a snapshot every 5 seconds.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">Mood Database &amp; Analytics</div>
+  <div class="g3">
+    <div class="card">
+      <div class="ch"><span>Session Stats</span><button class="btn sm" id="btnClear">Clear DB</button></div>
+      <div class="p" style="display:flex;flex-direction:column;gap:11px">
+        <div><div class="sv" id="stTotal"><span>0</span></div><div class="sl">Total Scans</div><div class="ss" id="stSub">No scans yet.</div></div>
+        <div style="height:1px;background:var(--border)"></div>
+        <div><div class="sv" id="stAvg"><span>—</span></div><div class="sl">Avg Confidence</div></div>
+        <div style="height:1px;background:var(--border)"></div>
+        <div><div class="sv" id="stDom"><span>—</span></div><div class="sl">Most Common Mood</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="ch">Mood Distribution</div><div class="p" id="distEl"><div class="emp"><div class="empico">📊</div>No data yet.</div></div></div>
+    <div class="card">
+      <div class="ch">Confidence Trend</div>
+      <div class="p" style="padding-top:11px">
+        <svg id="trendSvg" width="100%" height="86" viewBox="0 0 300 86" preserveAspectRatio="none">
+          <text x="150" y="46" text-anchor="middle" fill="rgba(255,255,255,.12)" font-family="DM Mono,monospace" font-size="10">No data yet</text>
+        </svg>
+        <div class="tl2"><span>oldest</span><span id="trendCount">0 scans</span><span>latest</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="sec">Scan History</div>
+  <div class="card" style="overflow:hidden">
+    <div class="ch"><span>Records · <span id="histCount">0</span> entries</span><span style="font-size:.49rem;color:var(--mut)">IndexedDB · persists across sessions</span></div>
+    <div class="hl" id="histList"><div class="emp"><div class="empico">🗄️</div>Database empty.</div></div>
+  </div>
+  <footer>MindMirror · Neural emotion detection · No data leaves your browser · Not a substitute for professional care</footer>
+  </div><!-- /page-scan -->
+
+  <!-- ══ PROFILE PAGE ══ -->
+  <div class="page" id="page-profile">
+
+    <!-- Hero -->
+    <div class="pf-hero">
+      <div class="pf-avatar" id="pfAvatar" title="Click to change photo">
+        <img id="pfAvatarImg" src="" alt=""/>
+        <span id="pfAvatarEmoji">🧘</span>
+        <input type="file" accept="image/*" id="pfAvatarFile" onchange="loadAvatar(this)"/>
+      </div>
+      <div class="pf-hero-info">
+        <div class="pf-name" id="pfName">Your Name</div>
+        <div class="pf-tagline" id="pfTagline">Wellness journey · MindMirror member</div>
+        <button class="pf-edit-btn" onclick="toggleEditForm()">✏ Edit Profile</button>
+      </div>
+    </div>
+
+    <!-- Edit form -->
+    <div class="pf-form-wrap">
+      <div class="pf-form" id="pfForm">
+        <div class="pf-row">
+          <div class="pf-field"><label class="pf-label">First Name</label><input class="pf-input" id="pfInputName" placeholder="Your name"/></div>
+          <div class="pf-field"><label class="pf-label">Age</label><input class="pf-input" id="pfInputAge" type="number" placeholder="e.g. 28" min="1" max="120"/></div>
+        </div>
+        <div class="pf-row">
+          <div class="pf-field"><label class="pf-label">Occupation</label><input class="pf-input" id="pfInputOccupation" placeholder="e.g. Designer"/></div>
+          <div class="pf-field"><label class="pf-label">Wellness Goal</label>
+            <select class="pf-input" id="pfInputGoal">
+              <option value="">Select a goal…</option>
+              <option value="Reduce stress">Reduce stress</option>
+              <option value="Improve happiness">Improve happiness</option>
+              <option value="Manage anxiety">Manage anxiety</option>
+              <option value="Build emotional resilience">Build emotional resilience</option>
+              <option value="Track mood patterns">Track mood patterns</option>
+              <option value="Improve mindfulness">Improve mindfulness</option>
+            </select>
+          </div>
+        </div>
+        <div class="pf-field"><label class="pf-label">Personal Bio</label><input class="pf-input" id="pfInputBio" placeholder="A short note about yourself…"/></div>
+        <div class="pf-actions">
+          <button class="pf-save" onclick="saveProfile()">Save Profile</button>
+          <button class="pf-cancel" onclick="toggleEditForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stat tiles -->
+    <div class="stat-tiles">
+      <div class="tile"><div class="tile-val" id="pfTileScans"><span>0</span></div><div class="tile-lbl">Total Scans</div></div>
+      <div class="tile"><div class="tile-val" id="pfTileStreak"><span>0</span></div><div class="tile-lbl">Day Streak 🔥</div></div>
+      <div class="tile"><div class="tile-val" id="pfTileAvg"><span>—</span></div><div class="tile-lbl">Avg Confidence</div></div>
+      <div class="tile"><div class="tile-val" id="pfTileDom"><span>—</span></div><div class="tile-lbl">Dominant Mood</div></div>
+    </div>
+
+    <!-- Mood donut + Timeline -->
+    <div class="pf-grid2">
+      <div class="card">
+        <div class="ch">Mood Breakdown</div>
+        <div class="donut-wrap">
+          <svg id="donutSvg" width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="18"/>
+            <text x="60" y="65" text-anchor="middle" fill="rgba(255,255,255,.2)" font-family="DM Mono,monospace" font-size="9" id="donutLabel">No data</text>
+          </svg>
+          <div class="donut-legend" id="donutLegend"><div style="font-size:.53rem;color:var(--mut)">Start scanning to see breakdown</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch">Recent Mood Timeline</div>
+        <div class="tl-wrap" id="tlWrap">
+          <div class="emp2"><div class="bi2">📈</div>No scans yet.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Streak calendar -->
+    <div class="card pf-full">
+      <div class="ch">Scan Activity · Last 60 Days</div>
+      <div class="streak-row">
+        <div class="streak-num" id="streakNum">0</div>
+        <div class="streak-info">
+          <div class="streak-lbl">Current Streak</div>
+          <div class="streak-sub" id="streakSub">Scan daily to build your streak.</div>
+        </div>
+      </div>
+      <div class="cal-wrap"><div class="cal-grid" id="calGrid"></div></div>
+    </div>
+
+    <!-- Wellness goals -->
+    <div class="card pf-full">
+      <div class="ch">Wellness Goals</div>
+      <div class="goals-list" id="goalsList"></div>
+      <div class="goal-add">
+        <input class="goal-input" id="goalInput" placeholder="Add a wellness goal…" onkeydown="if(event.key==='Enter')addGoal()"/>
+        <button class="goal-add-btn" onclick="addGoal()">+ Add</button>
+      </div>
+    </div>
+
+  </div><!-- /page-profile -->
+
+</div><!-- /shell -->
+<script>
+const MOODS={happy:{e:'😊',n:'Joyful',c:'#7ee8c8'},sad:{e:'😔',n:'Melancholy',c:'#7eb8e8'},angry:{e:'😠',n:'Frustrated',c:'#ff6b6b'},fearful:{e:'😨',n:'Anxious',c:'#c47eff'},surprised:{e:'😲',n:'Surprised',c:'#ffe07e'},disgusted:{e:'🤢',n:'Unsettled',c:'#b8ff7e'},neutral:{e:'😐',n:'Composed',c:'#e8e4dc'}};
+const THERAPY={happy:[{t:'Gratitude Journal',b:'Write 3 things you\'re grateful for to anchor this positive energy.'},{t:'Share the Light',b:'Reach out to someone — positive emotions multiply when shared.'},{t:'Flow State',b:'Engage a creative challenge; your mind is primed for deep focus.'}],sad:[{t:'Compassion Breath',b:'Inhale 4, hold 4, exhale 6. Repeat 5 cycles to calm your system.'},{t:'Self-Compassion',b:'Write yourself a kind letter as if comforting a beloved friend.'},{t:'Gentle Movement',b:'A short walk shifts serotonin and eases emotional weight.'}],angry:[{t:'Box Breathing',b:'4 in · 4 hold · 4 out · 4 hold. Four cycles regulate your response.'},{t:'Progressive Release',b:'Tense each muscle 5 sec then release fully — feet to shoulders.'},{t:'Expressive Writing',b:'Write what triggered you freely. Then safely discard the page.'}],fearful:[{t:'5-4-3-2-1 Ground',b:'5 see · 4 touch · 3 hear · 2 smell · 1 taste. Return to now.'},{t:'Safety Anchor',b:'Hand on chest: "I am safe in this present moment." Repeat slowly.'},{t:'EMDR Tapping',b:'Alternate tap knees left-right while breathing slowly, 2 min.'}],surprised:[{t:'Orient & Settle',b:'Name 5 objects you can see. This grounds your nervous system.'},{t:'Breath Regulation',b:'3 deep slow breaths — surprise spikes cortisol; breathing counters it.'},{t:'Curiosity Reframe',b:'Ask: what was unexpected and what does that reveal about you?'}],disgusted:[{t:'Cognitive Reframe',b:'Is this a values conflict or threat? Naming it reduces power.'},{t:'Mindful Observe',b:'Label it "disgust" and observe without reacting for 60 seconds.'},{t:'Cleansing Ritual',b:'Wash hands slowly — physical acts can reset your emotional state.'}],neutral:[{t:'Mindful Check-In',b:'Scan your body from head to toe; notice where quiet tension hides.'},{t:'Intention Setting',b:'Use this balanced state to set one clear purpose for your session.'},{t:'Loving-Kindness',b:'Silently wish happiness to yourself, a friend, and all beings.'}]};
+const EK=Object.keys(MOODS);
+const G=id=>document.getElementById(id);
+const SCAN_EVERY=5000;
+
+// ── IndexedDB ──────────────────────────────────────────────────────────────
+const DB_NAME='MindMirrorDB9',STORE='scans';
+let db=null;
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:'id',autoIncrement:true}).createIndex('ts','ts');};r.onsuccess=e=>{db=e.target.result;res();};r.onerror=rej;});}
+const dbSave=r=>new Promise((res,rej)=>{if(!db)return res();const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).add(r).onsuccess=()=>res();tx.onerror=rej;});
+const dbAll=()=>new Promise((res,rej)=>{if(!db)return res([]);const tx=db.transaction(STORE,'readonly');tx.objectStore(STORE).index('ts').getAll().onsuccess=e=>res(e.target.result);tx.onerror=rej;});
+const dbClear=()=>new Promise((res,rej)=>{if(!db)return res();const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).clear().onsuccess=res;tx.onerror=rej;});
+
+// ── Expr bars ──────────────────────────────────────────────────────────────
+G('exprList').innerHTML=EK.map(k=>`<div class="erow"><div class="en">${k}</div><div class="ebw"><div class="eb" id="b_${k}"></div></div><div class="ev" id="v_${k}">—</div></div>`).join('');
+
+// ── Load face-api.js ───────────────────────────────────────────────────────
+const SCRIPT_URLS=['https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js','https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js'];
+const WEIGHT_BASES=['https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights','https://raw.githubusercontent.com/justadudewhohacks/face-api.js/0.22.2/weights'];
+
+function loadScript(urls){return new Promise((res,rej)=>{let i=0;function next(){if(i>=urls.length)return rej(new Error('All mirrors failed'));const s=document.createElement('script');s.src=urls[i++];s.onload=res;s.onerror=()=>{s.remove();next();};document.head.appendChild(s);}next();});}
+
+function setStep(i,ic,msg){G('i'+i).textContent=ic;if(msg)G('m'+i).textContent=msg;}
+function setProg(p,msg,ok){G('lfill').style.width=p+'%';G('lmsg').textContent=msg;if(ok)G('lmsg').style.color='var(--a)';}
+function setSB(t,c){const s=G('sb');s.textContent=t;s.className='sbar'+(c?' '+c:'');}
+
+async function loadModels(){
+  setStep(0,'⟳','Loading face-api.js…'); setProg(5,'Loading library…');
+  try{await loadScript(SCRIPT_URLS);setStep(0,'✓','face-api.js loaded');}
+  catch(e){setStep(0,'✗','Library failed — check internet');setProg(0,'Load failed');G('idleText').textContent='Load failed — check internet';setSB('Library load failed','er');return false;}
+
+  const models=[
+    {fn:b=>faceapi.nets.tinyFaceDetector.loadFromUri(b),     i:1,name:'TinyFaceDetector'},
+    {fn:b=>faceapi.nets.faceLandmark68TinyNet.loadFromUri(b),i:2,name:'FaceLandmarks'},
+    {fn:b=>faceapi.nets.faceExpressionNet.loadFromUri(b),    i:3,name:'FaceExpressions'},
+  ];
+  for(const {fn,i,name} of models){
+    setStep(i,'⟳',name+' loading…'); setProg(20+i*20,'Downloading '+name+'…');
+    let ok=false;
+    for(const base of WEIGHT_BASES){try{await fn(base);ok=true;break;}catch(e){console.warn(name+' failed from '+base,e.message);}}
+    if(!ok){setStep(i,'✗',name+' failed');setProg(0,'Model failed — check internet');G('idleText').textContent='Model load failed';setSB('Model load failed','er');return false;}
+    setStep(i,'✓',name+' ready');
+  }
+  setProg(100,'All models ready ✓',true);
+  return true;
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+let modelReady=false;
+(async()=>{
+  try{await openDB();await refresh();}catch(e){console.warn('DB:',e);}
+  const ok=await loadModels();
+  if(!ok)return;
+  modelReady=true;
+  G('btnStart').disabled=false;
+  G('idleText').textContent='Press Start Camera to begin';
+  setSB('Neural net ready — press Start Camera','ok');
+})();
+
+// ── Camera ─────────────────────────────────────────────────────────────────
+let stream=null,lastMood=null,rafId=null;
+let scanTimer=null,nextScanIn=SCAN_EVERY;
+let facePresent=false,lastDetection=null,detectBusy=false,scanBusy=false;
+let fc=0;
+
+G('btnStart').addEventListener('click',async()=>{
+  if(!modelReady)return;
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}}});
+    G('vid').srcObject=stream;
+    await new Promise(r=>{G('vid').onloadedmetadata=r;});
+    G('vid').play();
+    G('ov').width=G('vid').videoWidth||640;
+    G('ov').height=G('vid').videoHeight||480;
+    facePresent=false;lastDetection=null;lastMood=null;fc=0;nextScanIn=SCAN_EVERY;
+    setLive(true);setSB('Detecting… first scan in 5 s','ok');
+    scanTimer=setInterval(timerTick,200);
+    rafId=requestAnimationFrame(drawLoop);
+  }catch(e){alert('Camera error: '+e.message);}
+});
+
+G('btnStop').addEventListener('click',()=>{
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  stream=null;
+  clearInterval(scanTimer);scanTimer=null;
+  if(rafId)cancelAnimationFrame(rafId);rafId=null;
+  G('ov').getContext('2d').clearRect(0,0,G('ov').width,G('ov').height);
+  setLive(false);setSB('Stopped','');resetUI();updateCd(false);
+});
+
+G('btnClear').addEventListener('click',async()=>{if(!confirm('Clear all mood records?'))return;await dbClear();await refresh();});
+
+function setLive(on){
+  G('liveDot').className='dot'+(on?' on':'');
+  G('liveStatus').textContent=on?'Live':'Inactive';
+  G('idleEl').classList.toggle('h',on);
+  G('sl').classList.toggle('on',on);
+  G('btnStart').disabled=on;G('btnStop').disabled=!on;
+  document.querySelectorAll('.cn').forEach(c=>c.classList.toggle('s',on));
+  if(!on)G('nfb').classList.remove('show');
+}
+
+// ── Draw loop: face-api detection + overlay at ~60fps ─────────────────────
+const DETECT_INTERVAL=6; // run inference every 6 RAF frames (~100ms)
+async function drawLoop(){
+  if(!stream){rafId=null;return;}
+  rafId=requestAnimationFrame(drawLoop);
+  fc++;
+  const vid=G('vid'),ov=G('ov');
+  if(vid.readyState<2)return;
+
+  // Inference every DETECT_INTERVAL frames
+  if(fc%DETECT_INTERVAL===0 && !detectBusy){
+    detectBusy=true;
+    try{
+      lastDetection=await faceapi
+        .detectSingleFace(vid,new faceapi.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:0.4}))
+        .withFaceLandmarks(true)
+        .withFaceExpressions();
+    }catch(e){lastDetection=null;}
+    detectBusy=false;
+  }
+
+  // Draw
+  const ctx=ov.getContext('2d');
+  ctx.clearRect(0,0,ov.width,ov.height);
+  const W=ov.width;
+
+  if(!lastDetection){
+    if(facePresent){facePresent=false;G('nfb').classList.add('show');}
+    return;
+  }
+  if(!facePresent){facePresent=true;G('nfb').classList.remove('show');}
+
+  // Bounding box (mirrored)
+  const box=lastDetection.detection.box;
+  const mir=x=>W-x;
+  const bx=mir(box.x+box.width),by=box.y,bw=box.width,bh=box.height;
+  ctx.save();
+  ctx.strokeStyle=scanBusy?'#c47eff':'#7ee8c8';
+  ctx.lineWidth=1.5;ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=12;
+  ctx.strokeRect(bx,by,bw,bh);
+  // Corners
+  const cs=13;ctx.lineWidth=2.2;
+  [[bx,by],[bx+bw,by],[bx,by+bh],[bx+bw,by+bh]].forEach(([x,y],i)=>{
+    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(i%2===0?cs:-cs),y);
+    ctx.moveTo(x,y);ctx.lineTo(x,y+(i<2?cs:-cs));ctx.stroke();
+  });
+  // 68 landmark points
+  const pts=lastDetection.landmarks.positions;
+  [{s:0,e:16,col:'rgba(126,232,200,.28)'},{s:17,e:26,col:'rgba(196,126,255,.55)'},{s:27,e:35,col:'rgba(126,232,200,.4)'},{s:36,e:47,col:'rgba(255,224,126,.7)'},{s:48,e:67,col:'rgba(255,107,107,.65)'}].forEach(({s,e,col})=>{
+    ctx.fillStyle=col;ctx.shadowBlur=3;ctx.shadowColor=col;
+    for(let i=s;i<=e&&i<pts.length;i++){ctx.beginPath();ctx.arc(mir(pts[i].x),pts[i].y,1.5,0,Math.PI*2);ctx.fill();}
+  });
+  ctx.restore();
+
+  // Live UI update
+  const expr=lastDetection.expressions;
+  const sorted=Object.entries(expr).sort((a,b)=>b[1]-a[1]);
+  const [mood,score]=sorted[0];
+  const info=MOODS[mood]||MOODS.neutral;
+  const acc=Math.round(score*100);
+  const conf=acc>70?'high':acc>45?'medium':'low';
+
+  G('moodEmoji').textContent=info.e;
+  G('moodName').textContent=info.n;
+  G('moodConf').innerHTML=`Confidence: <strong style="color:${info.c}">${conf}</strong> <span style="opacity:.5">(${acc}%)</span>`;
+  EK.forEach(k=>{
+    const p=Math.round((expr[k]||0)*100);
+    const b=G('b_'+k),v=G('v_'+k);
+    if(b){b.style.width=p+'%';b.style.background=k===mood?info.c:'var(--a)';b.style.opacity=k===mood?'1':'.2';}
+    if(v)v.textContent=p+'%';
+  });
+  setRing(acc,conf,`Top: ${sorted.slice(0,2).map(([k,v])=>k+' '+Math.round(v*100)+'%').join(' · ')}`);
+  // Label on video
+  ctx.save();ctx.font='600 11px DM Mono,monospace';ctx.fillStyle=info.c;ctx.shadowColor=info.c;ctx.shadowBlur=8;ctx.globalAlpha=.9;
+  ctx.fillText(`${info.n}  ${acc}%`,bx+2,by-6);ctx.restore();
+  if(mood!==lastMood){lastMood=mood;buildRecs(mood);}
+}
+
+// ── Countdown timer — saves snapshot to DB every SCAN_EVERY ms ────────────
+async function timerTick(){
+  if(!stream)return;
+  nextScanIn-=200;
+  updateCd(true);
+  if(nextScanIn<=0){
+    nextScanIn=SCAN_EVERY;
+    if(facePresent&&lastDetection&&!scanBusy) await doSave();
+  }
+}
+
+async function doSave(){
+  scanBusy=true;
+  // Flash
+  const sf=G('sf');sf.classList.add('on');setTimeout(()=>sf.classList.remove('on'),170);
+  const cp=G('cdpulse');cp.classList.add('flash');setTimeout(()=>cp.classList.remove('flash'),500);
+  G('liveDot').className='dot saving';
+  const expr=lastDetection.expressions;
+  const sorted=Object.entries(expr).sort((a,b)=>b[1]-a[1]);
+  const [mood,score]=sorted[0];
+  const acc=Math.round(score*100);
+  const conf=acc>70?'high':acc>45?'medium':'low';
+  try{
+    await dbSave({ts:Date.now(),mood,accuracy:acc,confidence:conf,scores:Object.fromEntries(EK.map(k=>[k,Math.round((expr[k]||0)*100)]))});
+    await refresh();
+    setSB(`📸 Saved — ${MOODS[mood]?.e||''} ${MOODS[mood]?.n||mood} · ${acc}% · ${new Date().toLocaleTimeString()}`,'ok');
+  }catch(e){console.warn('DB:',e);}
+  setTimeout(()=>{if(stream)G('liveDot').className='dot on';},600);
+  scanBusy=false;
+}
+
+function updateCd(running){
+  const fill=G('cdfill'),txt=G('cdtxt');
+  if(!running||!stream){fill.style.width='0%';txt.textContent='—';txt.style.color='var(--mut)';return;}
+  const pct=((SCAN_EVERY-nextScanIn)/SCAN_EVERY*100).toFixed(1);
+  fill.style.width=pct+'%';
+  const secs=Math.ceil(nextScanIn/1000);
+  if(!facePresent){txt.textContent='⚠ No face — paused';txt.style.color='var(--yel)';fill.style.background='var(--yel)';fill.style.opacity='.35';}
+  else{txt.textContent='Saving in '+secs+'s';txt.style.color='var(--a)';fill.style.background='linear-gradient(90deg,var(--a),var(--a2))';fill.style.opacity='1';}
+}
+
+// ── Ring ───────────────────────────────────────────────────────────────────
+function setRing(pct,conf,desc){
+  const C=163,rf=G('ringFg');
+  rf.style.strokeDashoffset=C-(C*pct/100);
+  rf.style.stroke=pct===0?'rgba(255,255,255,.05)':conf==='high'?'#7ee8c8':conf==='medium'?'#ffe07e':'#ff6b6b';
+  G('ringVal').textContent=pct?pct+'%':'—';
+  if(desc)G('ringDesc').textContent=desc;
+}
+
+// ── Analytics ──────────────────────────────────────────────────────────────
+async function refresh(){const r=await dbAll();renderStats(r);renderDist(r);renderTrend(r);renderHist(r);}
+function renderStats(r){
+  const n=r.length;G('stTotal').innerHTML='<span>'+n+'</span>';G('histCount').textContent=n;
+  if(!n){G('stSub').textContent='No scans yet.';G('stAvg').innerHTML='<span>—</span>';G('stDom').innerHTML='<span>—</span>';return;}
+  G('stAvg').innerHTML='<span>'+Math.round(r.reduce((s,x)=>s+x.accuracy,0)/n)+'%</span>';
+  const cnt={};r.forEach(x=>{cnt[x.mood]=(cnt[x.mood]||0)+1;});
+  const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];
+  const ti=MOODS[top[0]]||MOODS.neutral;
+  G('stDom').innerHTML='<span>'+ti.e+' '+ti.n+'</span>';
+  const d1=new Date(r[0].ts).toLocaleDateString(),d2=new Date(r[n-1].ts).toLocaleDateString();
+  G('stSub').textContent=d1===d2?'All from '+d1:d1+' → '+d2;
+}
+function renderDist(r){
+  const el=G('distEl');
+  if(!r.length){el.innerHTML='<div class="emp"><div class="empico">📊</div>No data yet.</div>';return;}
+  const cnt={};r.forEach(x=>{cnt[x.mood]=(cnt[x.mood]||0)+1;});
+  const max=Math.max(...Object.values(cnt));
+  el.innerHTML='<div class="dl">'+Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([m,c])=>{const i=MOODS[m]||MOODS.neutral;return '<div class="dr"><div class="de">'+i.e+'</div><div class="dlab">'+i.n+'</div><div class="dbw"><div class="db" style="width:'+Math.round(c/max*100)+'%;background:'+i.c+'"></div></div><div class="dc">'+c+'</div></div>';}).join('')+'</div>';
+}
+function renderTrend(r){
+  const svg=G('trendSvg');G('trendCount').textContent=r.length+' scans';
+  if(r.length<2){svg.innerHTML='<text x="150" y="46" text-anchor="middle" fill="rgba(255,255,255,.12)" font-family="DM Mono,monospace" font-size="10">'+(r.length?'Need 2+ scans':'No data yet')+'</text>';return;}
+  const R=r.slice(-30),W=300,H=86,P=9;
+  const pts=R.map((x,i)=>[P+(i/(R.length-1))*(W-P*2),H-P-(x.accuracy/100)*(H-P*2)]);
+  const line='M'+pts.map(p=>p.join(',')).join('L');
+  const area=line+'L'+pts[pts.length-1][0]+','+(H-P)+' L'+pts[0][0]+','+(H-P)+'Z';
+  const grids=[25,50,75].map(v=>{const y=H-P-(v/100)*(H-P*2);return '<line x1="'+P+'" y1="'+y+'" x2="'+(W-P)+'" y2="'+y+'" stroke="rgba(255,255,255,.04)" stroke-width="1"/><text x="'+(P-2)+'" y="'+(y+3)+'" text-anchor="end" fill="rgba(255,255,255,.14)" font-family="DM Mono,monospace" font-size="7">'+v+'</text>';}).join('');
+  const dots=pts.map(([x,y],i)=>'<circle cx="'+x+'" cy="'+y+'" r="2.2" fill="'+(R[i].accuracy>70?'#7ee8c8':R[i].accuracy>45?'#ffe07e':'#ff6b6b')+'" opacity=".9"/>').join('');
+  svg.innerHTML='<defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7ee8c8" stop-opacity=".2"/><stop offset="100%" stop-color="#7ee8c8" stop-opacity="0"/></linearGradient></defs>'+grids+'<path fill="url(#cg)" d="'+area+'"/><path fill="none" stroke="#7ee8c8" stroke-width="1.4" stroke-linejoin="round" d="'+line+'"/>'+dots;
+}
+function renderHist(r){
+  const el=G('histList');
+  if(!r.length){el.innerHTML='<div class="emp"><div class="empico">🗄️</div>Database empty.</div>';return;}
+  el.innerHTML=[...r].reverse().slice(0,60).map(x=>{
+    const i=MOODS[x.mood]||MOODS.neutral;
+    const t=new Date(x.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const top=Object.entries(x.scores||{}).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>k+' '+v+'%').join(' · ');
+    return '<div class="hrow"><div class="he">'+i.e+'</div><div class="hm" style="color:'+i.c+'">'+i.n+'</div><div class="ha '+x.confidence+'">'+x.accuracy+'%</div><div class="hx">'+top+'</div><div class="ht">'+t+'</div></div>';
+  }).join('');
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function buildRecs(mood){
+  const rs=THERAPY[mood]||THERAPY.neutral;
+  G('recList').innerHTML=rs.map((r,i)=>'<div class="ri '+(i===0?'ac':'')+'" style="opacity:0;transform:translateY(6px);transition:opacity .34s '+(i*.1)+'s,transform .34s '+(i*.1)+'s"><div class="rt">'+r.t+'</div>'+r.b+'</div>').join('');
+  requestAnimationFrame(()=>{G('recList').querySelectorAll('.ri').forEach(e=>{e.style.opacity=e.classList.contains('ac')?'1':'.52';e.style.transform='none';});});
+}
+function resetUI(){
+  lastMood=null;lastDetection=null;facePresent=false;
+  G('moodEmoji').textContent='🌫️';G('moodName').textContent='Waiting…';G('moodConf').textContent='—';
+  EK.forEach(k=>{const b=G('b_'+k);if(b)b.style.width='0%';const v=G('v_'+k);if(v)v.textContent='—';});
+  setRing(0,'','Start camera to begin.');
+  G('recList').innerHTML='<div class="ri ac"><div class="rt">Begin</div>Start the camera to detect your mood with the neural net.</div>';
+}
+
+// ══════════════════════════════════════════════════════════
+// PAGE NAVIGATION
+// ══════════════════════════════════════════════════════════
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  G('page-'+id).classList.add('active');
+  G('nav'+id.charAt(0).toUpperCase()+id.slice(1)).classList.add('active');
+  if(id==='profile') refreshProfile();
+}
+
+// ══════════════════════════════════════════════════════════
+// PROFILE — localStorage for user data, IndexedDB for scans
+// ══════════════════════════════════════════════════════════
+const PF_KEY='mindmirror_profile';
+const GOALS_KEY='mindmirror_goals';
+
+function loadProfile(){
+  try{return JSON.parse(localStorage.getItem(PF_KEY)||'{}');}catch(e){return {};}
+}
+function saveProfileData(data){
+  localStorage.setItem(PF_KEY,JSON.stringify({...loadProfile(),...data}));
+}
+function loadGoals(){
+  try{return JSON.parse(localStorage.getItem(GOALS_KEY)||'[]');}catch(e){return [];}
+}
+function saveGoals(goals){localStorage.setItem(GOALS_KEY,JSON.stringify(goals));}
+
+// Apply saved profile to hero on load
+function applyProfileToHero(){
+  const pf=loadProfile();
+  if(pf.name){G('pfName').textContent=pf.name;}
+  const parts=[];
+  if(pf.age)parts.push('Age '+pf.age);
+  if(pf.occupation)parts.push(pf.occupation);
+  if(pf.goal)parts.push('Goal: '+pf.goal);
+  if(pf.bio)parts.push(pf.bio);
+  if(parts.length)G('pfTagline').textContent=parts.join(' · ');
+  if(pf.avatar){
+    G('pfAvatarImg').src=pf.avatar;
+    G('pfAvatarImg').classList.add('show');
+    G('pfAvatarEmoji').style.display='none';
+  }
+  // Pre-fill inputs
+  if(pf.name)G('pfInputName').value=pf.name;
+  if(pf.age)G('pfInputAge').value=pf.age;
+  if(pf.occupation)G('pfInputOccupation').value=pf.occupation;
+  if(pf.goal)G('pfInputGoal').value=pf.goal;
+  if(pf.bio)G('pfInputBio').value=pf.bio;
+}
+
+function toggleEditForm(){
+  const f=G('pfForm');
+  f.classList.toggle('show');
+}
+
+function saveProfile(){
+  const data={
+    name:G('pfInputName').value.trim()||'Your Name',
+    age:G('pfInputAge').value,
+    occupation:G('pfInputOccupation').value.trim(),
+    goal:G('pfInputGoal').value,
+    bio:G('pfInputBio').value.trim(),
+  };
+  saveProfileData(data);
+  applyProfileToHero();
+  G('pfForm').classList.remove('show');
+}
+
+function loadAvatar(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const src=e.target.result;
+    G('pfAvatarImg').src=src;
+    G('pfAvatarImg').classList.add('show');
+    G('pfAvatarEmoji').style.display='none';
+    saveProfileData({avatar:src});
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Goals ──────────────────────────────────────────────────
+function renderGoals(){
+  const goals=loadGoals();
+  const el=G('goalsList');
+  if(!goals.length){
+    el.innerHTML='<div class="emp2"><div class="bi2">🎯</div>No goals yet. Add one below to track your wellness intentions.</div>';
+    return;
+  }
+  el.innerHTML=goals.map((g,i)=>`
+    <div class="goal-item">
+      <div class="goal-check ${g.done?'done':''}" onclick="toggleGoal(${i})">${g.done?'✓':''}</div>
+      <div class="goal-text ${g.done?'done':''}">${g.text}</div>
+      <button class="goal-del" onclick="deleteGoal(${i})">✕</button>
+    </div>`).join('');
+}
+function addGoal(){
+  const input=G('goalInput');
+  const text=input.value.trim();if(!text)return;
+  const goals=loadGoals();
+  goals.push({text,done:false,created:Date.now()});
+  saveGoals(goals);input.value='';renderGoals();
+}
+function toggleGoal(i){
+  const goals=loadGoals();goals[i].done=!goals[i].done;saveGoals(goals);renderGoals();
+}
+function deleteGoal(i){
+  const goals=loadGoals();goals.splice(i,1);saveGoals(goals);renderGoals();
+}
+
+// ── Streak & Calendar ──────────────────────────────────────
+function computeStreak(records){
+  if(!records.length)return{streak:0,days:new Set()};
+  const days=new Set(records.map(r=>new Date(r.ts).toDateString()));
+  let streak=0;
+  const today=new Date();
+  for(let i=0;i<365;i++){
+    const d=new Date(today);d.setDate(today.getDate()-i);
+    if(days.has(d.toDateString()))streak++;
+    else if(i>0)break;
+  }
+  return{streak,days};
+}
+
+function renderCalendar(days){
+  const el=G('calGrid');if(!el)return;
+  const today=new Date();
+  const cells=[];
+  for(let i=59;i>=0;i--){
+    const d=new Date(today);d.setDate(today.getDate()-i);
+    const ds=d.toDateString();
+    const isToday=i===0;
+    const scanned=days.has(ds);
+    const label=d.toLocaleDateString([],{month:'short',day:'numeric'});
+    cells.push(`<div class="cal-day ${scanned?'scanned':''} ${isToday?'today':''}" title="${label}${scanned?' · scanned':''}"></div>`);
+  }
+  el.innerHTML=cells.join('');
+}
+
+// ── Donut chart ────────────────────────────────────────────
+function renderDonut(records){
+  const svg=G('donutSvg'),legend=G('donutLegend');
+  if(!records.length){
+    svg.innerHTML='<circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="18"/><text x="60" y="65" text-anchor="middle" fill="rgba(255,255,255,.2)" font-family="DM Mono,monospace" font-size="9">No data</text>';
+    legend.innerHTML='<div style="font-size:.53rem;color:var(--mut)">Start scanning to see breakdown</div>';
+    return;
+  }
+  const cnt={};records.forEach(r=>{cnt[r.mood]=(cnt[r.mood]||0)+1;});
+  const total=Object.values(cnt).reduce((a,b)=>a+b,0);
+  const sorted=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
+  const R=44,cx=60,cy=60,stroke=18;
+  const circ=2*Math.PI*R;
+  let offset=0;
+  let arcs='';
+  sorted.forEach(([mood,count])=>{
+    const info=MOODS[mood]||MOODS.neutral;
+    const pct=count/total;
+    const dash=pct*circ;
+    arcs+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${info.c}" stroke-width="${stroke}" stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})" opacity=".85"/>`;
+    offset+=dash;
+  });
+  // Centre label — top mood
+  const top=sorted[0];const topInfo=MOODS[top[0]]||MOODS.neutral;
+  svg.innerHTML=`<circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,.04)" stroke-width="18"/>${arcs}<text x="60" y="56" text-anchor="middle" fill="${topInfo.c}" font-family="DM Mono,monospace" font-size="18">${topInfo.e}</text><text x="60" y="69" text-anchor="middle" fill="rgba(255,255,255,.35)" font-family="DM Mono,monospace" font-size="7">${topInfo.n}</text>`;
+  legend.innerHTML=sorted.slice(0,5).map(([mood,count])=>{
+    const info=MOODS[mood]||MOODS.neutral;
+    return `<div class="donut-item"><div class="donut-swatch" style="background:${info.c}"></div><div class="donut-lbl">${info.n}</div><div class="donut-pct">${Math.round(count/total*100)}%</div></div>`;
+  }).join('');
+}
+
+// ── Mood Timeline ──────────────────────────────────────────
+function renderTimeline(records){
+  const el=G('tlWrap');if(!el)return;
+  const recent=[...records].reverse().slice(0,20);
+  if(!recent.length){el.innerHTML='<div class="emp2"><div class="bi2">📈</div>No scans yet.</div>';return;}
+  el.innerHTML=recent.map(r=>{
+    const info=MOODS[r.mood]||MOODS.neutral;
+    const t=new Date(r.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const d=new Date(r.ts).toLocaleDateString([],{month:'short',day:'numeric'});
+    return `<div class="tl-item">
+      <div class="tl-node" style="background:${info.c}"></div>
+      <div class="tl-time">${d}<br><span style="opacity:.5">${t}</span></div>
+      <div class="tl-mood">${info.e} ${info.n}</div>
+      <div class="tl-acc" style="color:${r.accuracy>70?'var(--a)':r.accuracy>45?'var(--yel)':'var(--red)'}">${r.accuracy}%</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Master refresh for profile ─────────────────────────────
+async function refreshProfile(){
+  applyProfileToHero();
+  renderGoals();
+  const records=await dbAll();
+  // Tiles
+  const n=records.length;
+  G('pfTileScans').innerHTML='<span>'+n+'</span>';
+  if(n){
+    G('pfTileAvg').innerHTML='<span>'+Math.round(records.reduce((s,r)=>s+r.accuracy,0)/n)+'%</span>';
+    const cnt={};records.forEach(r=>{cnt[r.mood]=(cnt[r.mood]||0)+1;});
+    const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];
+    const ti=MOODS[top[0]]||MOODS.neutral;
+    G('pfTileDom').innerHTML='<span>'+ti.e+'</span>';
+  }else{G('pfTileAvg').innerHTML='<span>—</span>';G('pfTileDom').innerHTML='<span>—</span>';}
+  const{streak,days}=computeStreak(records);
+  G('streakNum').textContent=streak;
+  G('pfTileStreak').innerHTML='<span>'+streak+'</span>';
+  G('streakSub').textContent=streak===0?'Scan today to start your streak!'
+    :streak===1?'Streak started! Come back tomorrow to keep it going.'
+    :'Amazing — '+streak+' day'+(streak>1?'s':'')+' in a row!';
+  renderCalendar(days);
+  renderDonut(records);
+  renderTimeline(records);
+}
+
+// Init profile on page load
+applyProfileToHero();
+</script>
+</body>
+</html>
